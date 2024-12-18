@@ -14,33 +14,51 @@ const Index = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Console log to verify Supabase client
-  console.log('Supabase client:', supabase);
-
   // Fetch reminders
   const { data: reminders = [], isLoading } = useQuery({
     queryKey: ["reminders"],
     queryFn: async () => {
+      console.log("Fetching reminders...");
       const { data, error } = await supabase
         .from("reminders")
         .select("*")
-        .order("dueDate", { ascending: true });
+        .order("due_date", { ascending: true });
 
-      if (error) throw error;
-      return data as Reminder[];
+      if (error) {
+        console.error("Error fetching reminders:", error);
+        throw error;
+      }
+      
+      // Map the database fields to our frontend model
+      return (data || []).map((item) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        dueDate: item.due_date,
+        createdAt: item.created_at,
+      })) as Reminder[];
     },
   });
 
   // Create reminder
   const createMutation = useMutation({
     mutationFn: async (newReminder: Partial<Reminder>) => {
+      console.log("Creating reminder:", newReminder);
       const { data, error } = await supabase
         .from("reminders")
-        .insert([{ ...newReminder, createdAt: new Date().toISOString() }])
+        .insert([{
+          title: newReminder.title,
+          description: newReminder.description,
+          due_date: newReminder.dueDate,
+          created_at: new Date().toISOString()
+        }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating reminder:", error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -55,14 +73,22 @@ const Index = () => {
   // Update reminder
   const updateMutation = useMutation({
     mutationFn: async (reminder: Partial<Reminder>) => {
+      console.log("Updating reminder:", reminder);
       const { data, error } = await supabase
         .from("reminders")
-        .update(reminder)
+        .update({
+          title: reminder.title,
+          description: reminder.description,
+          due_date: reminder.dueDate
+        })
         .eq("id", reminder.id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating reminder:", error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -77,8 +103,12 @@ const Index = () => {
   // Delete reminder
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      console.log("Deleting reminder:", id);
       const { error } = await supabase.from("reminders").delete().eq("id", id);
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting reminder:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reminders"] });
