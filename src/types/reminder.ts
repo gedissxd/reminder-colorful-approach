@@ -4,4 +4,5 @@ export interface Reminder {
   description: string | null;
   dueDate: string;
   createdAt: string;
+  archived: boolean;
 }

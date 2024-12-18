@@ -22,7 +22,7 @@ const Index = () => {
       const { data, error } = await supabase
         .from("reminders")
         .select("*")
-        .order("due_date", { ascending: true }); // Fixed: using due_date instead of dueDate
+        .order("due_date", { ascending: true });
 
       if (error) {
         console.error("Error fetching reminders:", error);
@@ -36,6 +36,7 @@ const Index = () => {
         description: item.description,
         dueDate: item.due_date,
         createdAt: item.created_at,
+        archived: item.archived,
       })) as Reminder[];
     },
   });
@@ -50,7 +51,8 @@ const Index = () => {
           title: newReminder.title,
           description: newReminder.description,
           due_date: newReminder.dueDate,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          archived: false
         }])
         .select()
         .single();
@@ -100,6 +102,32 @@ const Index = () => {
     },
   });
 
+  // Archive reminder
+  const archiveMutation = useMutation({
+    mutationFn: async ({ id, archived }: { id: string; archived: boolean }) => {
+      console.log(`${archived ? 'Archiving' : 'Unarchiving'} reminder:`, id);
+      const { data, error } = await supabase
+        .from("reminders")
+        .update({ archived })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error archiving reminder:", error);
+        throw error;
+      }
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
+      toast({
+        title: "Success",
+        description: `Reminder ${variables.archived ? 'archived' : 'unarchived'} successfully`,
+      });
+    },
+  });
+
   // Delete reminder
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -137,6 +165,10 @@ const Index = () => {
     deleteMutation.mutate(id);
   };
 
+  const handleArchive = (id: string, archived: boolean) => {
+    archiveMutation.mutate({ id, archived });
+  };
+
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setEditingReminder(null);
@@ -166,6 +198,7 @@ const Index = () => {
             reminder={reminder}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onArchive={handleArchive}
           />
         ))}
       </div>

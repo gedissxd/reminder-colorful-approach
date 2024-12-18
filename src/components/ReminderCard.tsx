@@ -1,7 +1,7 @@
 import { Reminder } from "@/types/reminder";
 import { getColorForDueDate } from "@/utils/dateUtils";
 import { format } from "date-fns";
-import { Pencil, Trash2 } from "lucide-react";
+import { Archive, Pencil, Trash2, ArchiveRestore } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader } from "./ui/card";
 
@@ -9,16 +9,30 @@ interface ReminderCardProps {
   reminder: Reminder;
   onEdit: (reminder: Reminder) => void;
   onDelete: (id: string) => void;
+  onArchive: (id: string, archived: boolean) => void;
 }
 
-export const ReminderCard = ({ reminder, onEdit, onDelete }: ReminderCardProps) => {
+export const ReminderCard = ({ reminder, onEdit, onDelete, onArchive }: ReminderCardProps) => {
   const colorClass = getColorForDueDate(reminder.dueDate);
 
   return (
-    <Card className={`${colorClass} transition-colors duration-200`}>
+    <Card className={`${colorClass} transition-colors duration-200 ${reminder.archived ? 'opacity-60' : ''}`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <h3 className="font-semibold text-lg">{reminder.title}</h3>
         <div className="space-x-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onArchive(reminder.id, !reminder.archived)}
+            className="h-8 w-8"
+            title={reminder.archived ? "Unarchive" : "Archive"}
+          >
+            {reminder.archived ? (
+              <ArchiveRestore className="h-4 w-4" />
+            ) : (
+              <Archive className="h-4 w-4" />
+            )}
+          </Button>
           <Button
             variant="ghost"
             size="icon"

@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       reminders: {
         Row: {
+          archived: boolean
           created_at: string
           description: string | null
           due_date: string
@@ -18,6 +19,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          archived?: boolean
           created_at?: string
           description?: string | null
           due_date: string
@@ -25,6 +27,7 @@ export type Database = {
           title: string
         }
         Update: {
+          archived?: boolean
           created_at?: string
           description?: string | null
           due_date?: string
