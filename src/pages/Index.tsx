@@ -1,12 +1,13 @@
-import { ReminderCard } from "@/components/ReminderCard";
+import { RemindersList } from "@/components/RemindersList";
 import { ReminderForm } from "@/components/ReminderForm";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Reminder } from "@/types/reminder";
+import { isPastDue } from "@/utils/dateUtils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PlusCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 const Index = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -29,17 +30,33 @@ const Index = () => {
         throw error;
       }
       
-      // Map the database fields to our frontend model
-      return (data || []).map((item) => ({
+      const mappedReminders = (data || []).map((item) => ({
         id: item.id,
         title: item.title,
         description: item.description,
         dueDate: item.due_date,
         createdAt: item.created_at,
-        archived: item.archived,
-      })) as Reminder[];
+        archived: item.archived || isPastDue(item.due_date), // Auto-archive past due reminders
+      }));
+
+      // Auto-archive past due reminders in the database
+      mappedReminders.forEach((reminder) => {
+        if (!reminder.archived && isPastDue(reminder.dueDate)) {
+          archiveMutation.mutate({ id: reminder.id, archived: true });
+        }
+      });
+
+      return mappedReminders as Reminder[];
     },
   });
+
+  // Split reminders into active and archived
+  const { activeReminders, archivedReminders } = useMemo(() => {
+    return {
+      activeReminders: reminders.filter(r => !r.archived),
+      archivedReminders: reminders.filter(r => r.archived)
+    };
+  }, [reminders]);
 
   // Create reminder
   const createMutation = useMutation({
@@ -191,17 +208,21 @@ const Index = () => {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {reminders.map((reminder) => (
-          <ReminderCard
-            key={reminder.id}
-            reminder={reminder}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onArchive={handleArchive}
-          />
-        ))}
-      </div>
+      <RemindersList
+        title="Active Reminders"
+        reminders={activeReminders}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onArchive={handleArchive}
+      />
+
+      <RemindersList
+        title="Archived Reminders"
+        reminders={archivedReminders}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onArchive={handleArchive}
+      />
 
       <ReminderForm
         open={isFormOpen}
