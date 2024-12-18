@@ -8,10 +8,15 @@ import { createClient } from "@supabase/supabase-js";
 import { PlusCircle } from "lucide-react";
 import { useState } from "react";
 
+// Initialize Supabase client with environment variables
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
+
+// Console log to help debug the environment variables
+console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+console.log('Supabase Anon Key:', import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 const Index = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
