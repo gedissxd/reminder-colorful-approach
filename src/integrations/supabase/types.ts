@@ -6,30 +6,30 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       reminders: {
         Row: {
-          id: string
-          title: string
+          created_at: string
           description: string | null
           due_date: string
-          created_at: string
+          id: string
+          title: string
         }
         Insert: {
-          id?: string
-          title: string
+          created_at?: string
           description?: string | null
           due_date: string
-          created_at?: string
+          id?: string
+          title: string
         }
         Update: {
-          id?: string
-          title?: string
+          created_at?: string
           description?: string | null
           due_date?: string
-          created_at?: string
+          id?: string
+          title?: string
         }
         Relationships: []
       }

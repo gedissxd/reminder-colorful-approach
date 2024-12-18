@@ -22,7 +22,7 @@ const Index = () => {
       const { data, error } = await supabase
         .from("reminders")
         .select("*")
-        .order("due_date", { ascending: true });
+        .order("due_date", { ascending: true }); // Fixed: using due_date instead of dueDate
 
       if (error) {
         console.error("Error fetching reminders:", error);
